@@ -85,7 +85,7 @@ The app entry point is `app.py` and the Flask application instance is `app`, so 
 ### GitHub deployment flow
 
 1. Push this project to GitHub.
-2. In Azure, create a Linux Web App using Python 3.11.
+2. In Azure, create a Linux Web App using Python 3.14.
 3. Connect the Web App to your GitHub repository.
 4. Azure will install dependencies from `requirements.txt` and start the app with gunicorn.
 
