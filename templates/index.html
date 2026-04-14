@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="page">
+        <section class="card">
+            <div class="hero">
+                <p class="eyebrow">Beginner-Friendly Flask App</p>
+                <h1>Recipe Generator</h1>
+                <p class="intro">
+                    Describe your ingredients, upload a photo if you want, and generate
+                    a recipe in seconds.
+                </p>
+            </div>
+
+            <form id="recipe-form" class="recipe-form">
+                <label for="ingredients">Ingredients or dish description</label>
+                <textarea
+                    id="ingredients"
+                    name="ingredients"
+                    rows="7"
+                    placeholder="Example: I have tomatoes, onions, garlic, pasta, and olive oil."
+                ></textarea>
+
+                <label for="image">Upload an image of ingredients (optional)</label>
+                <input id="image" name="image" type="file" accept="image/*">
+
+                <button id="generate-button" type="submit">Generate Recipe</button>
+            </form>
+
+            <section class="result-panel">
+                <div class="result-header">
+                    <h2>Your Recipe</h2>
+                    <p id="status-message" class="status-message"></p>
+                </div>
+                <pre id="recipe-output" class="recipe-output">Your generated recipe will appear here.</pre>
+            </section>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
