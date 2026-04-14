@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, render_template, request
 from dotenv import load_dotenv
-from mistralai.client import Mistral
+from mistralai import Mistral
 
 
 # Load environment variables
