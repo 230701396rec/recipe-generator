@@ -9,15 +9,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Retrieve API key and model
-API_KEY = os.getenv("MISTRAL_API_KEY")
 MODEL_NAME = os.getenv("MISTRAL_MODEL", "mistral-small-latest")
-
-if not API_KEY:
-    raise ValueError("MISTRAL_API_KEY is not set.")
-
-# Initialize Mistral client
-client = Mistral(api_key=API_KEY)
 
 def build_prompt(user_text):
     base_prompt = (
@@ -31,12 +23,24 @@ def build_prompt(user_text):
 def index():
     return render_template("index.html")
 
+
+def get_mistral_client():
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        return None
+    return Mistral(api_key=api_key)
+
+
 @app.route("/generate", methods=["POST"])
 def generate():
     user_text = request.form.get("ingredients", "").strip()
 
     if not user_text:
         return jsonify({"error": "Please enter ingredients."}), 400
+
+    client = get_mistral_client()
+    if client is None:
+        return jsonify({"error": "MISTRAL_API_KEY is not set."}), 500
 
     try:
         response = client.chat.complete(
@@ -61,5 +65,7 @@ def generate():
 def health():
     return jsonify({"status": "ok"}), 200
 
+
 if __name__ == "__main__":
+    import os
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
