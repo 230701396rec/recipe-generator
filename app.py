@@ -1,7 +1,7 @@
 import os
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from dotenv import load_dotenv
-from mistralai import Mistral
+from mistralai.client import MistralClient
 
 # Load environment variables (for local development)
 load_dotenv()
@@ -23,12 +23,11 @@ def get_mistral_client():
     api_key = os.getenv("MISTRAL_API_KEY")
     if not api_key:
         raise ValueError("MISTRAL_API_KEY environment variable is not set.")
-    return Mistral(api_key=api_key)
+    return MistralClient(api_key=api_key)
 
 
 @app.route("/")
 def index():
-    # Temporary fallback to ensure deployment works
     return "Recipe Generator is running successfully!"
 
 
@@ -41,11 +40,11 @@ def generate():
 
     try:
         client = get_mistral_client()
-        response = client.chat.complete(
+        response = client.chat(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": build_prompt(user_text)}],
         )
-        recipe_text = response.choices[0].message.content
+        recipe_text = response.choices[0].message["content"]
         return jsonify({"recipe": recipe_text})
     except Exception as exc:
         return jsonify({"error": f"Recipe generation failed: {str(exc)}"}), 500
