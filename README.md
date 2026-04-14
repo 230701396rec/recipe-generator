@@ -62,7 +62,7 @@ Do not hardcode secrets in the code.
 
 ## Azure deployment
 
-Deploy this repository to an Azure Web App on Linux with Python 3.11.
+Deploy this repository to an Azure Web App on Linux with Python 3.14.
 
 ### Azure App Settings
 
