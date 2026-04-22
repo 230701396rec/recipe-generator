@@ -34,6 +34,16 @@ jobs:
           python -m venv antenv
           source antenv/bin/activate
           pip install -r requirements.txt
+
+      - name: Verify app imports before packaging
+        run: |
+          source antenv/bin/activate
+          python -c "from services.blob_service import BlobService; import app; print('import checks passed')"
+
+      - name: Show packaged service files
+        run: |
+          echo "Commit: $GITHUB_SHA"
+          find services -maxdepth 2 -type f | sort
                 
       # By default, when you enable GitHub CI/CD integration through the Azure portal, the platform automatically sets the SCM_DO_BUILD_DURING_DEPLOYMENT application setting to true. This triggers the use of Oryx, a build engine that handles application compilation and dependency installation (e.g., pip install) directly on the platform during deployment. Hence, we exclude the antenv virtual environment directory from the deployment artifact to reduce the payload size. 
       - name: Upload artifact for deployment jobs
@@ -62,6 +72,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
+
+      - name: Verify downloaded artifact contents
+        run: |
+          echo "Deploying commit: $GITHUB_SHA"
+          test -f services/blob_service.py
+          find services -maxdepth 2 -type f | sort
       
       - name: Login to Azure with OIDC
         if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
