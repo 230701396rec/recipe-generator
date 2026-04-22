@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecipeGenie | Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="page dashboard-page">
+        <section class="card">
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">Recipe Dashboard</p>
+                    <h1>Generate, save, and revisit recipes in one place.</h1>
+                    <p class="intro">
+                        Use your dashboard to create new recipes, upload images, and manage
+                        your saved collection tied to your authenticated app service account.
+                    </p>
+                </div>
+
+                <aside class="auth-panel">
+                    <div class="result-actions">
+                        <a href="/" class="ghost-button link-button">Back to Sign In</a>
+                        <button id="logout-button" type="button" class="secondary-button">Logout</button>
+                    </div>
+                    <p id="auth-status" class="auth-status">Checking app service session...</p>
+                </aside>
+            </header>
+
+            <div class="dashboard-layout">
+                <section class="workspace-panel">
+                    <form id="recipe-form" class="recipe-form">
+                        <label for="ingredients">Ingredients or dish description</label>
+                        <textarea
+                            id="ingredients"
+                            name="ingredients"
+                            rows="7"
+                            placeholder="Example: I have tomatoes, onions, garlic, pasta, and olive oil."
+                        ></textarea>
+
+                        <label for="image">Upload an image of ingredients or the finished dish (optional)</label>
+                        <input id="image" name="image" type="file" accept="image/*">
+
+                        <button id="generate-button" type="submit">Generate Recipe</button>
+                    </form>
+
+                    <section class="result-panel">
+                        <div class="result-header">
+                            <h2>Your Recipe</h2>
+                            <div class="result-actions">
+                                <p id="status-message" class="status-message"></p>
+                                <button id="save-button" type="button" class="secondary-button" disabled>Save Recipe</button>
+                            </div>
+                        </div>
+                        <pre id="recipe-output" class="recipe-output">Your generated recipe will appear here.</pre>
+                    </section>
+                </section>
+
+                <section class="saved-panel saved-panel-sidebar">
+                    <div class="result-header">
+                        <h2>My Saved Recipes</h2>
+                        <button id="refresh-recipes-button" type="button" class="ghost-button">Refresh</button>
+                    </div>
+                    <p id="saved-status" class="status-message">
+                        Sign in to load saved recipes from Azure Cosmos DB.
+                    </p>
+                    <div id="saved-recipes" class="saved-recipes"></div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

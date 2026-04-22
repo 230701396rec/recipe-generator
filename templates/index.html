@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RecipeGenie</title>
+    <title>RecipeGenie | Sign In</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <main class="page">
-        <section class="card">
-            <div class="hero">
-                <h1>RecipeGenie</h1>
-                <p class="intro">
-                    Describe your ingredients, upload a photo if you want, and generate
-                    a recipe in seconds.
-                </p>
-            </div>
-
-            <form id="recipe-form" class="recipe-form">
-                <label for="ingredients">Ingredients or dish description</label>
-                <textarea
-                    id="ingredients"
-                    name="ingredients"
-                    rows="7"
-                    placeholder="Example: I have tomatoes, onions, garlic, pasta, and olive oil."
-                ></textarea>
-
-                <label for="image">Upload an image of ingredients (optional)</label>
-                <input id="image" name="image" type="file" accept="image/*">
-
-                <button id="generate-button" type="submit">Generate Recipe</button>
-            </form>
-
-            <section class="result-panel">
-                <div class="result-header">
-                    <h2>Your Recipe</h2>
-                    <p id="status-message" class="status-message"></p>
+    <main class="page auth-page">
+        <section class="card auth-card auth-card-wide">
+            <div class="auth-hero">
+                <div>
+                    <p class="eyebrow">Recipe Generator</p>
+                    <h1>Cook smarter with your Azure-hosted recipe dashboard.</h1>
+                    <p class="intro">
+                        Sign in with Azure App Service Authentication to generate recipes,
+                        save favorites in Cosmos DB, and keep recipe photos in Blob Storage.
+                    </p>
+                    <div class="feature-grid">
+                        <article class="feature-tile">
+                            <h2>Managed Sign-In</h2>
+                            <p>Authentication is handled by Azure App Service, so your session is managed automatically.</p>
+                        </article>
+                        <article class="feature-tile">
+                            <h2>Saved Recipes</h2>
+                            <p>Your personal recipe history is linked to your account and stored in Cosmos DB.</p>
+                        </article>
+                        <article class="feature-tile">
+                            <h2>Image Uploads</h2>
+                            <p>Attach dish and ingredient photos, then keep their URLs in your recipe records.</p>
+                        </article>
+                    </div>
                 </div>
-                <pre id="recipe-output" class="recipe-output">Your generated recipe will appear here.</pre>
-            </section>
+
+                <aside class="auth-panel login-panel">
+                    <p class="eyebrow">Welcome</p>
+                    <h2 class="panel-title">Sign in to continue</h2>
+                    <p id="auth-status" class="auth-status">Checking your app service session...</p>
+                    <div class="stack-actions">
+                        <button id="login-button" type="button" class="secondary-button">Sign In</button>
+                        <button id="dashboard-button" type="button" class="ghost-button">Open Dashboard</button>
+                    </div>
+                    <p class="panel-note">
+                        After signing in, you'll be redirected to your recipe dashboard automatically.
+                    </p>
+                </aside>
+            </div>
         </section>
     </main>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='login.js') }}"></script>
 </body>
 </html>

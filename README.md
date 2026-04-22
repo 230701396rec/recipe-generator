@@ -1,6 +1,6 @@
 # Recipe Generator
 
-Recipe Generator is a simple Flask web application that creates recipes from ingredients entered by the user. It uses the Mistral AI API and is ready to deploy to Azure Web App from GitHub.
+Recipe Generator is a Flask web application that creates recipes from user-provided ingredients, supports Azure AD B2C authentication, stores saved recipes in Azure Cosmos DB, and uploads recipe images to Azure Blob Storage.
 
 ## Project structure
 
@@ -8,6 +8,14 @@ Recipe Generator is a simple Flask web application that creates recipes from ing
 recipe-generator/
 |
 |-- app.py
+|-- middleware/
+|   |-- auth_middleware.py
+|-- routes/
+|   |-- recipe_routes.py
+|-- services/
+|   |-- blob_service.py
+|   |-- cosmos_service.py
+|   |-- recipe_service.py
 |-- requirements.txt
 |-- Procfile
 |-- runtime.txt
@@ -16,6 +24,8 @@ recipe-generator/
 |-- templates/
 |   |-- index.html
 |-- static/
+|   |-- auth.js
+|   |-- login.js
 |   |-- style.css
 |   |-- script.js
 ```
@@ -34,6 +44,23 @@ pip install -r requirements.txt
 MISTRAL_API_KEY=your_api_key_here
 MISTRAL_MODEL=mistral-small-latest
 PORT=8000
+
+AZURE_B2C_TENANT_NAME=yourtenant
+AZURE_B2C_TENANT_DOMAIN=yourtenant.onmicrosoft.com
+AZURE_B2C_POLICY=B2C_1_signupsignin
+AZURE_B2C_CLIENT_ID=your_spa_client_id
+AZURE_B2C_AUDIENCE=your_api_app_client_id
+AZURE_B2C_API_SCOPES=https://yourtenant.onmicrosoft.com/api/demo.read
+
+AZURE_COSMOS_ENDPOINT=https://your-account.documents.azure.com:443/
+AZURE_COSMOS_KEY=your_cosmos_key
+AZURE_COSMOS_DATABASE=recipe-generator
+AZURE_COSMOS_USERS_CONTAINER=users
+AZURE_COSMOS_RECIPES_CONTAINER=recipes
+
+AZURE_BLOB_CONNECTION_STRING=your_blob_connection_string
+AZURE_BLOB_CONTAINER=recipe-images
+AZURE_BLOB_PUBLIC_BASE_URL=https://yourstorageaccount.blob.core.windows.net/recipe-images
 ```
 
 ## Run locally
@@ -57,8 +84,33 @@ The application reads these environment variables:
 - `MISTRAL_API_KEY`
 - `MISTRAL_MODEL` (optional, defaults to `mistral-small-latest`)
 - `PORT`
+- `AZURE_B2C_TENANT_NAME`
+- `AZURE_B2C_TENANT_DOMAIN`
+- `AZURE_B2C_POLICY`
+- `AZURE_B2C_CLIENT_ID`
+- `AZURE_B2C_AUDIENCE`
+- `AZURE_B2C_API_SCOPES`
+- `AZURE_B2C_REDIRECT_URI` (optional)
+- `AZURE_B2C_POST_LOGOUT_REDIRECT_URI` (optional)
+- `AZURE_COSMOS_ENDPOINT`
+- `AZURE_COSMOS_KEY`
+- `AZURE_COSMOS_DATABASE`
+- `AZURE_COSMOS_USERS_CONTAINER`
+- `AZURE_COSMOS_RECIPES_CONTAINER`
+- `AZURE_BLOB_CONNECTION_STRING`
+- `AZURE_BLOB_CONTAINER`
+- `AZURE_BLOB_PUBLIC_BASE_URL` (optional)
 
 Do not hardcode secrets in the code.
+
+## API routes
+
+- `POST /generate` keeps the original public recipe generation flow.
+- `POST /generate-recipe` is the authenticated Azure AD B2C protected generation route.
+- `POST /save-recipe` saves a generated recipe and optional image.
+- `GET /my-recipes` returns recipes for the signed-in user.
+- `POST /favorite-recipes/<recipe_id>` toggles favorite recipes.
+- `GET /admin/recipes` is restricted to users with the `admin` role claim.
 
 ## Azure deployment
 
