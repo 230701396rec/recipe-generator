@@ -4,6 +4,9 @@
 
 name: Build and deploy Python app to Azure Web App - Recipev1
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches:
@@ -60,17 +63,26 @@ jobs:
         with:
           name: python-app
       
-      - name: Login to Azure
+      - name: Login to Azure with OIDC
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2285C92D9B63462BB90FCF0A46A41BC5 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F8290486D1944083A2B073648A4AC1DC }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_730EAE08250B4FCBA888A883F7AF20F0 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App with publish profile
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Recipev1'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+      - name: Deploy to Azure Web App with OIDC
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'Recipev1'
           slot-name: 'Production'
-          
