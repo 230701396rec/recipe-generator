@@ -6,7 +6,6 @@ from flask import Flask, jsonify, render_template, request
 from middleware.auth_middleware import AzureB2CAuth
 from routes.recipe_routes import create_recipe_blueprint
 from services.blob_service import BlobService
-from services.cosmos_service import CosmosService
 from services.recipe_service import RecipeGenerationService
 
 
@@ -25,19 +24,11 @@ def create_app():
         required_scopes=os.getenv("AZURE_B2C_API_SCOPES", "").strip(),
     )
 
-    cosmos_service = CosmosService(
-        connection_string=os.getenv("COSMOS_CONNECTION_STRING", "").strip(),
-        endpoint=os.getenv("AZURE_COSMOS_ENDPOINT", "").strip(),
-        key=os.getenv("AZURE_COSMOS_KEY", "").strip(),
-        database_name=os.getenv("AZURE_COSMOS_DATABASE", "RecipeDB").strip(),
-        users_container=os.getenv("AZURE_COSMOS_USERS_CONTAINER", "users").strip(),
-        recipes_container=os.getenv("AZURE_COSMOS_RECIPES_CONTAINER", "Recipes").strip(),
-    )
-
     blob_service = BlobService(
-        connection_string=os.getenv("AZURE_BLOB_CONNECTION_STRING", "").strip(),
+        connection_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING", "").strip(),
         container_name=os.getenv("AZURE_BLOB_CONTAINER", "recipe-images").strip(),
         public_base_url=os.getenv("AZURE_BLOB_PUBLIC_BASE_URL", "").strip(),
+        recipes_container_name=os.getenv("AZURE_RECIPES_CONTAINER", "recipes").strip(),
     )
 
     recipe_service = RecipeGenerationService(
@@ -48,7 +39,6 @@ def create_app():
     app.register_blueprint(
         create_recipe_blueprint(
             auth_client=auth_client,
-            cosmos_service=cosmos_service,
             blob_service=blob_service,
             recipe_service=recipe_service,
         )

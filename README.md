@@ -1,6 +1,6 @@
 # Recipe Generator
 
-Recipe Generator is a Flask web application that creates recipes from user-provided ingredients, supports Azure AD B2C authentication, stores saved recipes in Azure Cosmos DB, and uploads recipe images to Azure Blob Storage.
+Recipe Generator is a Flask web application that creates recipes from user-provided ingredients, supports Azure AD B2C authentication, stores saved recipes as JSON files in Azure Blob Storage, and uploads recipe images to Azure Blob Storage.
 
 ## Project structure
 
@@ -14,7 +14,6 @@ recipe-generator/
 |   |-- recipe_routes.py
 |-- services/
 |   |-- blob_service.py
-|   |-- cosmos_service.py
 |   |-- recipe_service.py
 |-- requirements.txt
 |-- Procfile
@@ -52,14 +51,9 @@ AZURE_B2C_CLIENT_ID=your_spa_client_id
 AZURE_B2C_AUDIENCE=your_api_app_client_id
 AZURE_B2C_API_SCOPES=https://yourtenant.onmicrosoft.com/api/demo.read
 
-AZURE_COSMOS_ENDPOINT=https://your-account.documents.azure.com:443/
-AZURE_COSMOS_KEY=your_cosmos_key
-AZURE_COSMOS_DATABASE=recipe-generator
-AZURE_COSMOS_USERS_CONTAINER=users
-AZURE_COSMOS_RECIPES_CONTAINER=recipes
-
-AZURE_BLOB_CONNECTION_STRING=your_blob_connection_string
+AZURE_STORAGE_CONNECTION_STRING=your_blob_connection_string
 AZURE_BLOB_CONTAINER=recipe-images
+AZURE_RECIPES_CONTAINER=recipes
 AZURE_BLOB_PUBLIC_BASE_URL=https://yourstorageaccount.blob.core.windows.net/recipe-images
 ```
 
@@ -92,13 +86,9 @@ The application reads these environment variables:
 - `AZURE_B2C_API_SCOPES`
 - `AZURE_B2C_REDIRECT_URI` (optional)
 - `AZURE_B2C_POST_LOGOUT_REDIRECT_URI` (optional)
-- `AZURE_COSMOS_ENDPOINT`
-- `AZURE_COSMOS_KEY`
-- `AZURE_COSMOS_DATABASE`
-- `AZURE_COSMOS_USERS_CONTAINER`
-- `AZURE_COSMOS_RECIPES_CONTAINER`
-- `AZURE_BLOB_CONNECTION_STRING`
+- `AZURE_STORAGE_CONNECTION_STRING`
 - `AZURE_BLOB_CONTAINER`
+- `AZURE_RECIPES_CONTAINER` (optional, defaults to `recipes`)
 - `AZURE_BLOB_PUBLIC_BASE_URL` (optional)
 
 Do not hardcode secrets in the code.
@@ -107,10 +97,10 @@ Do not hardcode secrets in the code.
 
 - `POST /generate` keeps the original public recipe generation flow.
 - `POST /generate-recipe` is the authenticated Azure AD B2C protected generation route.
-- `POST /save-recipe` saves a generated recipe and optional image.
-- `GET /my-recipes` returns recipes for the signed-in user.
-- `POST /favorite-recipes/<recipe_id>` toggles favorite recipes.
-- `GET /admin/recipes` is restricted to users with the `admin` role claim.
+- `POST /save-recipe` saves a generated recipe as a JSON blob and optionally uploads an image.
+- `GET /my-recipes` keeps the existing route available and currently returns an empty list in Blob-only mode.
+- `POST /favorite-recipes/<recipe_id>` keeps the existing route available but favorite updates are not supported in Blob-only mode.
+- `GET /admin/recipes` keeps the existing route available and currently returns an empty list in Blob-only mode.
 
 ## Azure deployment
 

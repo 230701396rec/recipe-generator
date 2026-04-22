@@ -55,10 +55,7 @@ function recipeCardTemplate(recipe) {
             ${imageMarkup}
             <div class="recipe-card-body">
                 <div class="recipe-card-header">
-                    <strong>${recipe.favorite ? "Favorite" : "Saved Recipe"}</strong>
-                    <button type="button" class="ghost-button favorite-button" data-favorite="${recipe.favorite}">
-                        ${recipe.favorite ? "Unfavorite" : "Favorite"}
-                    </button>
+                    <strong>Saved Recipe</strong>
                 </div>
                 <p class="recipe-meta">${recipe.createdAt || "Just now"}</p>
                 <p class="recipe-meta">${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : (recipe.ingredients || "No ingredients provided.")}</p>
@@ -161,35 +158,6 @@ saveButton.addEventListener("click", async () => {
 
 refreshRecipesButton.addEventListener("click", async () => {
     await loadSavedRecipes();
-});
-
-savedRecipes.addEventListener("click", async (event) => {
-    const target = event.target.closest(".favorite-button");
-    if (!target) {
-        return;
-    }
-
-    const recipeCard = target.closest(".recipe-card");
-    const recipeId = recipeCard?.dataset.recipeId;
-    if (!recipeId) {
-        return;
-    }
-
-    const nextFavorite = target.dataset.favorite !== "true";
-
-    try {
-        savedStatus.textContent = "Updating favorite...";
-        await apiRequest(`/favorite-recipes/${recipeId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ favorite: nextFavorite })
-        });
-        await loadSavedRecipes();
-    } catch (error) {
-        savedStatus.textContent = error.message;
-    }
 });
 
 logoutButton.addEventListener("click", async () => {

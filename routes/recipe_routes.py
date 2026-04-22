@@ -6,14 +6,6 @@ from flask import Blueprint, jsonify, request
 
 
 logger = logging.getLogger(__name__)
-
-
-def _parse_boolean(value):
-    if isinstance(value, bool):
-        return value
-    return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _payload_field(payload, key, default=""):
     value = payload.get(key, default)
     return value.strip() if isinstance(value, str) else value
@@ -104,7 +96,7 @@ def _require_user():
         return None, (jsonify({"error": "Unauthorized"}), 401)
 
 
-def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_service):
+def create_recipe_blueprint(auth_client, blob_service, recipe_service):
     recipe_bp = Blueprint("recipe", __name__)
 
     @recipe_bp.route("/generate", methods=["POST"])
@@ -130,8 +122,6 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
         generated_recipe = _payload_field(payload, "generatedRecipe") or _payload_field(
             payload, "recipe"
         )
-        favorite = _parse_boolean(payload.get("favorite", False))
-
         if not generated_recipe:
             return jsonify({"error": "generatedRecipe is required."}), 400
 
@@ -140,12 +130,11 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
             if image_file and image_file.filename:
                 image_url = blob_service.upload_image(image_file, user["userId"])
 
-            recipe = cosmos_service.add_recipe(
+            recipe = blob_service.save_recipe(
                 {
                     "ingredients": ingredients,
                     "generatedRecipe": generated_recipe,
                     "imageUrl": image_url,
-                    "favorite": favorite,
                 },
                 user,
             )
@@ -161,11 +150,21 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
 
         try:
             page, page_size = _get_pagination()
-            recipes = cosmos_service.get_recipes_by_user(
-                user["userId"], page=page, page_size=page_size
+            return (
+                jsonify(
+                    {
+                        "recipes": [],
+                        "page": page,
+                        "pageSize": page_size,
+                        "total": 0,
+                        "user": {
+                            "userId": user["userId"],
+                            "email": user.get("email", ""),
+                        },
+                    }
+                ),
+                200,
             )
-            recipes["user"] = {"userId": user["userId"], "email": user.get("email", "")}
-            return jsonify(recipes), 200
         except Exception as exc:
             return jsonify({"error": f"Unable to load recipes: {exc}"}), 500
 
@@ -176,10 +175,14 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
             return error_response
 
         try:
-            recipe = cosmos_service.get_recipe_by_id(recipe_id, user["userId"])
-            if not recipe:
-                return jsonify({"error": "Recipe not found."}), 404
-            return jsonify({"recipe": recipe, "user": user}), 200
+            return (
+                jsonify(
+                    {
+                        "error": "Recipe lookup is not available when using Blob-only storage."
+                    }
+                ),
+                404,
+            )
         except Exception as exc:
             return jsonify({"error": f"Unable to load recipe: {exc}"}), 500
 
@@ -190,10 +193,14 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
             return error_response
 
         try:
-            deleted = cosmos_service.delete_recipe(recipe_id, user["userId"])
-            if not deleted:
-                return jsonify({"error": "Recipe not found."}), 404
-            return jsonify({"message": "Recipe deleted successfully."}), 200
+            return (
+                jsonify(
+                    {
+                        "error": "Recipe deletion is not available when using Blob-only storage."
+                    }
+                ),
+                404,
+            )
         except Exception as exc:
             return jsonify({"error": f"Unable to delete recipe: {exc}"}), 500
 
@@ -203,16 +210,15 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
         if error_response:
             return error_response
 
-        payload = request.get_json(silent=True) or {}
-        favorite = _parse_boolean(payload.get("favorite", True))
-
         try:
-            recipe = cosmos_service.set_recipe_favorite(
-                recipe_id=recipe_id,
-                user_id=user["userId"],
-                favorite=favorite,
+            return (
+                jsonify(
+                    {
+                        "error": "Favorite updates are not available when using Blob-only storage."
+                    }
+                ),
+                404,
             )
-            return jsonify(recipe), 200
         except Exception as exc:
             return jsonify({"error": f"Unable to update favorite: {exc}"}), 500
 
@@ -225,8 +231,7 @@ def create_recipe_blueprint(auth_client, cosmos_service, blob_service, recipe_se
             return jsonify({"error": "You do not have permission to access this route."}), 403
 
         try:
-            recipes = cosmos_service.list_all_recipes()
-            return jsonify({"recipes": recipes}), 200
+            return jsonify({"recipes": []}), 200
         except Exception as exc:
             return jsonify({"error": f"Unable to load admin recipes: {exc}"}), 500
 
