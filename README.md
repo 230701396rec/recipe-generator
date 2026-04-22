@@ -1,6 +1,6 @@
 # Recipe Generator
 
-Recipe Generator is a Flask web application that creates recipes from user-provided ingredients, supports Azure AD B2C authentication, stores saved recipes as JSON files in Azure Blob Storage, and uploads recipe images to Azure Blob Storage.
+Recipe Generator is a Flask web application that creates recipes from user-provided ingredients, stores saved recipes as JSON files in Azure Blob Storage, and uploads recipe images to Azure Blob Storage.
 
 ## Project structure
 
@@ -8,8 +8,6 @@ Recipe Generator is a Flask web application that creates recipes from user-provi
 recipe-generator/
 |
 |-- app.py
-|-- middleware/
-|   |-- auth_middleware.py
 |-- routes/
 |   |-- recipe_routes.py
 |-- services/
@@ -44,13 +42,6 @@ MISTRAL_API_KEY=your_api_key_here
 MISTRAL_MODEL=mistral-small-latest
 PORT=8000
 
-AZURE_B2C_TENANT_NAME=yourtenant
-AZURE_B2C_TENANT_DOMAIN=yourtenant.onmicrosoft.com
-AZURE_B2C_POLICY=B2C_1_signupsignin
-AZURE_B2C_CLIENT_ID=your_spa_client_id
-AZURE_B2C_AUDIENCE=your_api_app_client_id
-AZURE_B2C_API_SCOPES=https://yourtenant.onmicrosoft.com/api/demo.read
-
 AZURE_STORAGE_CONNECTION_STRING=your_blob_connection_string
 AZURE_BLOB_CONTAINER=recipe-images
 AZURE_RECIPES_CONTAINER=recipes
@@ -78,14 +69,6 @@ The application reads these environment variables:
 - `MISTRAL_API_KEY`
 - `MISTRAL_MODEL` (optional, defaults to `mistral-small-latest`)
 - `PORT`
-- `AZURE_B2C_TENANT_NAME`
-- `AZURE_B2C_TENANT_DOMAIN`
-- `AZURE_B2C_POLICY`
-- `AZURE_B2C_CLIENT_ID`
-- `AZURE_B2C_AUDIENCE`
-- `AZURE_B2C_API_SCOPES`
-- `AZURE_B2C_REDIRECT_URI` (optional)
-- `AZURE_B2C_POST_LOGOUT_REDIRECT_URI` (optional)
 - `AZURE_STORAGE_CONNECTION_STRING`
 - `AZURE_BLOB_CONTAINER`
 - `AZURE_RECIPES_CONTAINER` (optional, defaults to `recipes`)
@@ -96,7 +79,7 @@ Do not hardcode secrets in the code.
 ## API routes
 
 - `POST /generate` keeps the original public recipe generation flow.
-- `POST /generate-recipe` is the authenticated Azure AD B2C protected generation route.
+- `POST /generate-recipe` generates a recipe using the same backend recipe flow.
 - `POST /save-recipe` saves a generated recipe as a JSON blob and optionally uploads an image.
 - `GET /my-recipes` keeps the existing route available and currently returns an empty list in Blob-only mode.
 - `POST /favorite-recipes/<recipe_id>` keeps the existing route available but favorite updates are not supported in Blob-only mode.

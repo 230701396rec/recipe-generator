@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
-from middleware.auth_middleware import AzureB2CAuth
 from routes.recipe_routes import create_recipe_blueprint
 from services.blob_service import BlobService
 from services.recipe_service import RecipeGenerationService
@@ -14,15 +13,6 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-
-    auth_client = AzureB2CAuth(
-        tenant_name=os.getenv("AZURE_B2C_TENANT_NAME", "").strip(),
-        tenant_domain=os.getenv("AZURE_B2C_TENANT_DOMAIN", "").strip(),
-        policy_name=os.getenv("AZURE_B2C_POLICY", "").strip(),
-        client_id=os.getenv("AZURE_B2C_CLIENT_ID", "").strip(),
-        audience=os.getenv("AZURE_B2C_AUDIENCE", "").strip(),
-        required_scopes=os.getenv("AZURE_B2C_API_SCOPES", "").strip(),
-    )
 
     blob_service = BlobService(
         connection_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING", "").strip(),
@@ -38,7 +28,6 @@ def create_app():
 
     app.register_blueprint(
         create_recipe_blueprint(
-            auth_client=auth_client,
             blob_service=blob_service,
             recipe_service=recipe_service,
         )
@@ -51,27 +40,6 @@ def create_app():
     @app.route("/dashboard")
     def dashboard():
         return render_template("dashboard.html")
-
-    @app.route("/auth/config")
-    def auth_config():
-        host_url = request.host_url.rstrip("/")
-        login_scopes = ["openid", "profile", "offline_access"]
-        api_scopes = auth_client.required_scopes or []
-
-        return jsonify(
-            {
-                "enabled": auth_client.is_enabled,
-                "clientId": auth_client.client_id,
-                "authority": auth_client.authority,
-                "knownAuthority": auth_client.known_authority,
-                "redirectUri": os.getenv("AZURE_B2C_REDIRECT_URI", host_url).strip(),
-                "postLogoutRedirectUri": os.getenv(
-                    "AZURE_B2C_POST_LOGOUT_REDIRECT_URI", host_url
-                ).strip(),
-                "loginScopes": login_scopes,
-                "apiScopes": api_scopes,
-            }
-        )
 
     @app.route("/health")
     def health():

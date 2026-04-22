@@ -96,7 +96,7 @@ def _require_user():
         return None, (jsonify({"error": "Unauthorized"}), 401)
 
 
-def create_recipe_blueprint(auth_client, blob_service, recipe_service):
+def create_recipe_blueprint(blob_service, recipe_service):
     recipe_bp = Blueprint("recipe", __name__)
 
     @recipe_bp.route("/generate", methods=["POST"])
