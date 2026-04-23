@@ -91,7 +91,8 @@ class BlobService:
             raise RuntimeError("generatedRecipe is required.")
 
         container_client = self._get_container_client(self.recipes_container_name)
-        blob_name = f"{uuid4()}.json"
+        user_id = user.get("userId") if user else "anonymous"
+        blob_name = f"{user_id}/{uuid4()}.json"
 
         recipe = {
             "ingredients": self._normalize_ingredients(data.get("ingredients")),
@@ -118,3 +119,23 @@ class BlobService:
             "blobName": blob_name,
             "recipe": recipe,
         }
+
+    def get_user_recipes(self, user_id):
+        self.ensure_configured()
+        container_client = self._get_container_client(self.recipes_container_name)
+        
+        recipes = []
+        blob_list = container_client.list_blobs(name_starts_with=f"{user_id}/")
+        
+        for blob in blob_list:
+            try:
+                blob_client = container_client.get_blob_client(blob.name)
+                blob_data = blob_client.download_blob().readall()
+                recipe_data = json.loads(blob_data)
+                recipe_data['id'] = blob.name.split('/')[-1].replace('.json', '')
+                recipes.append(recipe_data)
+            except Exception:
+                continue
+                
+        recipes.sort(key=lambda x: x.get('createdAt', ''), reverse=True)
+        return recipes
