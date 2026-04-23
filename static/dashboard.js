@@ -8,6 +8,7 @@ import {
 
 const form = document.getElementById("recipe-form");
 const imageInput = document.getElementById("image");
+const imagePreview = document.getElementById("image-preview");
 const generateButton = document.getElementById("generate-button");
 const saveButton = document.getElementById("save-button");
 const refreshRecipesButton = document.getElementById("refresh-recipes-button");
@@ -17,6 +18,21 @@ const recipeOutput = document.getElementById("recipe-output");
 const savedRecipes = document.getElementById("saved-recipes");
 
 let currentRecipe = "";
+
+imageInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            imagePreview.classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+    } else {
+        imagePreview.src = "";
+        imagePreview.classList.add("hidden");
+    }
+});
 
 function setRecipeActionsEnabled(isEnabled) {
     saveButton.disabled = !isEnabled;
