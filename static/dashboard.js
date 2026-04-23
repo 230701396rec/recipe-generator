@@ -12,9 +12,7 @@ const generateButton = document.getElementById("generate-button");
 const saveButton = document.getElementById("save-button");
 const refreshRecipesButton = document.getElementById("refresh-recipes-button");
 const logoutButton = document.getElementById("logout-button");
-const authStatus = document.getElementById("auth-status");
 const statusMessage = document.getElementById("status-message");
-const savedStatus = document.getElementById("saved-status");
 const recipeOutput = document.getElementById("recipe-output");
 const savedRecipes = document.getElementById("saved-recipes");
 
@@ -66,34 +64,22 @@ function recipeCardTemplate(recipe) {
 }
 
 async function loadSavedRecipes() {
-    if (!isAuthConfigured()) {
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
-        savedRecipes.innerHTML = "";
-        return;
-    }
-
-    if (!isAuthEnabled()) {
-        savedStatus.textContent = "Your session is missing. Please sign in again.";
-        savedRecipes.innerHTML = "";
-        window.location.assign("/");
+    if (!isAuthConfigured() || !isAuthEnabled()) {
+        savedRecipes.innerHTML = "<p>Please sign in to access your recipes.</p>";
         return;
     }
 
     try {
-        savedStatus.textContent = "Loading your saved recipes...";
         const data = await apiRequest("/my-recipes");
 
         if (!data.recipes.length) {
-            savedRecipes.innerHTML = "";
-            savedStatus.textContent = "No recipes saved yet.";
+            savedRecipes.innerHTML = "<p>No recipes saved yet.</p>";
             return;
         }
 
         savedRecipes.innerHTML = data.recipes.map(recipeCardTemplate).join("");
-        savedStatus.textContent = `${data.recipes.length} recipe(s) loaded.`;
     } catch (error) {
-        savedRecipes.innerHTML = "";
-        savedStatus.textContent = error.message;
+        savedRecipes.innerHTML = `<p class="error-text">${error.message}</p>`;
     }
 }
 
@@ -165,28 +151,14 @@ logoutButton.addEventListener("click", async () => {
 });
 
 onAuthStateChanged(async ({ enabled, user, error }) => {
-    if (error) {
-        authStatus.textContent = error.message;
-        savedStatus.textContent = error.message;
-        return;
-    }
+    if (error) return;
 
-    if (!enabled) {
-        authStatus.textContent = "Easy Auth is not available in this environment.";
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
-        setRecipeActionsEnabled(false);
-        return;
-    }
-
-    if (!user) {
-        authStatus.textContent = "No active session found. Redirecting to sign in...";
-        savedStatus.textContent = "Please sign in to access your dashboard.";
+    if (!enabled || !user) {
         setRecipeActionsEnabled(false);
         window.location.assign("/");
         return;
     }
 
-    authStatus.textContent = `Signed in as ${user.email || user.userId}.`;
     setRecipeActionsEnabled(Boolean(currentRecipe));
     await loadSavedRecipes();
 });
@@ -194,13 +166,8 @@ onAuthStateChanged(async ({ enabled, user, error }) => {
 try {
     const authState = await initAuth();
     if (!authState.user && isAuthConfigured()) {
-        authStatus.textContent = "No active session found. Redirecting to sign in...";
         window.location.assign("/");
-    } else if (!authState.user) {
-        authStatus.textContent = "Easy Auth is not available in this environment.";
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
     }
 } catch (error) {
-    authStatus.textContent = error.message;
-    savedStatus.textContent = error.message;
+    console.error("Auth initialization failed:", error);
 }
