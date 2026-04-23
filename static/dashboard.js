@@ -34,13 +34,25 @@ imageInput.addEventListener("change", (event) => {
     }
 });
 
+function parseMarkdown(text) {
+    if (!text) return "";
+    return text
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
+
 function setRecipeActionsEnabled(isEnabled) {
     saveButton.disabled = !isEnabled;
 }
 
 function resetRecipeOutput(message) {
     currentRecipe = "";
-    recipeOutput.textContent = message;
+    recipeOutput.innerHTML = message;
     setRecipeActionsEnabled(false);
 }
 
@@ -73,7 +85,7 @@ function recipeCardTemplate(recipe) {
                 </div>
                 <p class="recipe-meta">${recipe.createdAt || "Just now"}</p>
                 <p class="recipe-meta">${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : (recipe.ingredients || "No ingredients provided.")}</p>
-                <pre>${recipe.generatedRecipe}</pre>
+                <div class="recipe-content">${parseMarkdown(recipe.generatedRecipe)}</div>
             </div>
         </article>
     `;
@@ -104,7 +116,7 @@ form.addEventListener("submit", async (event) => {
 
     generateButton.disabled = true;
     statusMessage.textContent = "Generating recipe...";
-    recipeOutput.textContent = "Please wait while your recipe is being created.";
+    recipeOutput.innerHTML = "Please wait while your recipe is being created.";
 
     try {
         const formData = new FormData(form);
@@ -114,7 +126,7 @@ form.addEventListener("submit", async (event) => {
         });
 
         currentRecipe = data.recipe;
-        recipeOutput.textContent = currentRecipe;
+        recipeOutput.innerHTML = parseMarkdown(currentRecipe);
         statusMessage.textContent = "Recipe generated successfully.";
         setRecipeActionsEnabled(Boolean(currentRecipe));
     } catch (error) {
