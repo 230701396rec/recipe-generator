@@ -12,22 +12,45 @@ class RecipeGenerationService:
 
     @staticmethod
     def build_prompt(user_text, image_file):
-        prompt = (
-            "Generate a detailed recipe with a title, short introduction, "
-            "ingredients list, and step-by-step cooking instructions based on "
-            "the provided ingredients or dish description.\n\n"
-            f"User input:\n{user_text or 'No text provided.'}"
+        import base64
+
+        text_prompt = (
+            "You are an expert chef. Please generate a detailed recipe with a title, short introduction, "
+            "ingredients list, and step-by-step cooking instructions.\n\n"
         )
 
-        if image_file and image_file.filename:
-            prompt += (
-                "\n\nThe user also uploaded an image file named "
-                f"'{image_file.filename}'. If the text is limited, mention that the "
-                "recipe is based mainly on the text input because image analysis is "
-                "not enabled in this deployment."
+        has_image = bool(image_file and image_file.filename)
+        
+        if has_image:
+            text_prompt += (
+                "Based on the provided image:\n"
+                "1. If the image shows a completed dish, identify it and generate the recipe for it.\n"
+                "2. If the image shows raw ingredients, generate a recipe that uses these ingredients.\n\n"
             )
 
-        return prompt
+        if user_text:
+            text_prompt += f"Additionally, consider the following text input:\n{user_text}\n"
+
+        if not has_image:
+            return text_prompt
+
+        image_bytes = image_file.read()
+        image_file.seek(0)
+        base64_image = base64.b64encode(image_bytes).decode("utf-8")
+        
+        mime_type = image_file.content_type if hasattr(image_file, 'content_type') and image_file.content_type else "image/jpeg"
+        image_url = f"data:{mime_type};base64,{base64_image}"
+
+        return [
+            {
+                "type": "text",
+                "text": text_prompt
+            },
+            {
+                "type": "image_url",
+                "image_url": image_url
+            }
+        ]
 
     def generate_recipe(self, prompt):
         if not self.api_key:
