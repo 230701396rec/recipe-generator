@@ -1,7 +1,10 @@
 import os
+import logging
 
+from azure.monitor.opentelemetry import configure_azure_monitor
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+from opentelemetry import trace
 
 from routes.recipe_routes import create_recipe_blueprint
 from services.blob_service import BlobService
@@ -9,6 +12,23 @@ from services.recipe_service import RecipeGenerationService
 
 
 load_dotenv()
+
+# Application Insights reads telemetry from this connection string.
+# Keep the value in environment variables or Azure App Settings, never in code.
+APPLICATIONINSIGHTS_CONNECTION_STRING = os.getenv(
+    "APPLICATIONINSIGHTS_CONNECTION_STRING",
+    "",
+).strip()
+
+if APPLICATIONINSIGHTS_CONNECTION_STRING:
+    # Azure Monitor OpenTelemetry auto-tracks Flask requests, exceptions, and logs.
+    configure_azure_monitor(
+        connection_string=APPLICATIONINSIGHTS_CONNECTION_STRING,
+    )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 def create_app():
@@ -43,6 +63,9 @@ def create_app():
 
     @app.route("/health")
     def health():
+        # Example custom span/trace visible in Application Insights transaction details.
+        with tracer.start_as_current_span("health_check"):
+            logger.info("Health check endpoint called")
         return jsonify({"status": "ok"}), 200
 
     return app
