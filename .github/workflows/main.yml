@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Simple pipeline check
+        run: echo "CI check passed"
+
+      - name: Build backend Docker image
+        run: docker build -t recipe-backend ./backend
+
+      - name: Build ML service Docker image
+        run: docker build -t recipe-ml-service ./ml-service
