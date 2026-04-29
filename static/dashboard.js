@@ -13,11 +13,18 @@ const generateButton = document.getElementById("generate-button");
 const saveButton = document.getElementById("save-button");
 const refreshRecipesButton = document.getElementById("refresh-recipes-button");
 const logoutButton = document.getElementById("logout-button");
+const refreshMetricsButton = document.getElementById("refresh-metrics-button");
 const statusMessage = document.getElementById("status-message");
+const metricsStatus = document.getElementById("metrics-status");
 const recipeOutput = document.getElementById("recipe-output");
 const savedRecipes = document.getElementById("saved-recipes");
+const metricsChart = document.getElementById("metrics-chart");
+const responseTimeValue = document.getElementById("response-time-value");
+const availabilityValue = document.getElementById("availability-value");
+const requestCountValue = document.getElementById("request-count-value");
 
 let currentRecipe = "";
+let metricsPollTimer = null;
 
 imageInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
@@ -69,6 +76,120 @@ async function apiRequest(url, options = {}) {
     }
 
     return data;
+}
+
+function drawEmptyChart(ctx, width, height, message) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#736b5e";
+    ctx.font = "14px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(message, width / 2, height / 2);
+}
+
+function drawMetricsChart(samples) {
+    if (!metricsChart) return;
+
+    const ctx = metricsChart.getContext("2d");
+    const width = metricsChart.width;
+    const height = metricsChart.height;
+    const padding = { top: 24, right: 34, bottom: 42, left: 54 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (!samples.length) {
+        drawEmptyChart(ctx, width, height, "No request data yet. Refresh or use the app to create samples.");
+        return;
+    }
+
+    const maxDuration = Math.max(100, ...samples.map((sample) => sample.durationMs));
+    const xForIndex = (index) => {
+        if (samples.length === 1) return padding.left + chartWidth;
+        return padding.left + (index / (samples.length - 1)) * chartWidth;
+    };
+    const yForDuration = (duration) => padding.top + chartHeight - (duration / maxDuration) * chartHeight;
+    const yForAvailability = (isAvailable) => padding.top + chartHeight - (isAvailable ? chartHeight : 0);
+
+    ctx.strokeStyle = "#efe6dc";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i += 1) {
+        const y = padding.top + (i / 4) * chartHeight;
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#736b5e";
+    ctx.font = "12px Inter, sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`${Math.round(maxDuration)} ms`, padding.left - 10, padding.top + 4);
+    ctx.fillText("0 ms", padding.left - 10, padding.top + chartHeight + 4);
+
+    ctx.textAlign = "left";
+    ctx.fillText("100%", width - padding.right + 8, padding.top + 4);
+    ctx.fillText("0%", width - padding.right + 8, padding.top + chartHeight + 4);
+
+    ctx.strokeStyle = "#2f7d6b";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    samples.forEach((sample, index) => {
+        const x = xForIndex(index);
+        const y = yForAvailability(sample.available);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = "#ff6b4a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    samples.forEach((sample, index) => {
+        const x = xForIndex(index);
+        const y = yForDuration(sample.durationMs);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    samples.forEach((sample, index) => {
+        const x = xForIndex(index);
+        const y = yForDuration(sample.durationMs);
+        ctx.fillStyle = sample.available ? "#ff6b4a" : "#c0392b";
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.fillStyle = "#2c2925";
+    ctx.font = "12px Inter, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Response time", padding.left, height - 14);
+    ctx.fillStyle = "#2f7d6b";
+    ctx.fillText("Availability", padding.left + 120, height - 14);
+}
+
+async function loadMetrics() {
+    if (!metricsChart) return;
+
+    try {
+        const data = await apiRequest("/metrics/summary");
+        const samples = Array.isArray(data.samples) ? data.samples : [];
+
+        responseTimeValue.textContent = `${data.averageResponseTimeMs || 0} ms`;
+        availabilityValue.textContent = `${data.availabilityPercent ?? 100}%`;
+        requestCountValue.textContent = data.totalRequests || 0;
+        metricsStatus.textContent = samples.length
+            ? `Updated with the last ${samples.length} request${samples.length === 1 ? "" : "s"}.`
+            : "Waiting for request data.";
+        drawMetricsChart(samples);
+    } catch (error) {
+        metricsStatus.textContent = error.message;
+        drawMetricsChart([]);
+    }
 }
 
 function recipeCardTemplate(recipe) {
@@ -174,6 +295,10 @@ refreshRecipesButton.addEventListener("click", async () => {
     await loadSavedRecipes();
 });
 
+refreshMetricsButton.addEventListener("click", async () => {
+    await loadMetrics();
+});
+
 logoutButton.addEventListener("click", async () => {
     await logout();
 });
@@ -181,7 +306,13 @@ logoutButton.addEventListener("click", async () => {
 onAuthStateChanged(async ({ enabled, user, error }) => {
     if (error) return;
 
-    if (!enabled || !user) {
+    if (!enabled) {
+        setRecipeActionsEnabled(false);
+        savedRecipes.innerHTML = "<p>Sign-in is not configured locally.</p>";
+        return;
+    }
+
+    if (!user) {
         setRecipeActionsEnabled(false);
         window.location.assign("/");
         return;
@@ -192,10 +323,19 @@ onAuthStateChanged(async ({ enabled, user, error }) => {
 });
 
 try {
+    await loadMetrics();
+    metricsPollTimer = window.setInterval(loadMetrics, 10000);
+
     const authState = await initAuth();
     if (!authState.user && isAuthConfigured()) {
         window.location.assign("/");
     }
 } catch (error) {
     console.error("Auth initialization failed:", error);
+} finally {
+    window.addEventListener("beforeunload", () => {
+        if (metricsPollTimer) {
+            window.clearInterval(metricsPollTimer);
+        }
+    });
 }

@@ -27,6 +27,36 @@
 
             <div class="dashboard-layout">
                 <section class="workspace-panel">
+                    <section class="metrics-panel">
+                        <div class="result-header">
+                            <div>
+                                <h2>Server Monitoring</h2>
+                                <p class="panel-note">Live response time and availability from recent Flask requests.</p>
+                            </div>
+                            <button id="refresh-metrics-button" type="button" class="ghost-button">Refresh</button>
+                        </div>
+
+                        <div class="metrics-summary">
+                            <div class="metric-tile">
+                                <span>Response Time</span>
+                                <strong id="response-time-value">-- ms</strong>
+                            </div>
+                            <div class="metric-tile">
+                                <span>Availability</span>
+                                <strong id="availability-value">--%</strong>
+                            </div>
+                            <div class="metric-tile">
+                                <span>Requests</span>
+                                <strong id="request-count-value">0</strong>
+                            </div>
+                        </div>
+
+                        <div class="chart-wrap">
+                            <canvas id="metrics-chart" width="720" height="280" aria-label="Server response time and availability chart"></canvas>
+                        </div>
+                        <p id="metrics-status" class="status-message"></p>
+                    </section>
+
                     <form id="recipe-form" class="recipe-form">
                         <label for="ingredients">Ingredients or dish description</label>
                         <textarea

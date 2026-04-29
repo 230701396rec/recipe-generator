@@ -73,8 +73,34 @@ The application reads these environment variables:
 - `AZURE_BLOB_CONTAINER`
 - `AZURE_RECIPES_CONTAINER` (optional, defaults to `recipes`)
 - `AZURE_BLOB_PUBLIC_BASE_URL` (optional)
+- `APPLICATIONINSIGHTS_CONNECTION_STRING` (optional, enables Azure Application Insights telemetry)
 
 Do not hardcode secrets in the code.
+
+## Application Insights telemetry
+
+When `APPLICATIONINSIGHTS_CONNECTION_STRING` is configured, the app sends the normal Flask request telemetry plus these custom metrics:
+
+- `recipegenie.server.response_time`
+- `recipegenie.server.availability`
+- `recipegenie.server.requests`
+- `recipegenie.server.failed_requests`
+
+Example Kusto queries in Application Insights Logs:
+
+```kusto
+customMetrics
+| where name == "recipegenie.server.response_time"
+| summarize avg(value) by bin(timestamp, 5m)
+| render timechart
+```
+
+```kusto
+customMetrics
+| where name == "recipegenie.server.availability"
+| summarize availabilityPercent = avg(value) by bin(timestamp, 5m)
+| render timechart
+```
 
 ## API routes
 
