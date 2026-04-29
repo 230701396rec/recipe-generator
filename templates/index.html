@@ -3,52 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RecipeGenie | Sign In</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>RecipeGenie | Redirecting...</title>
+    <script>
+        // Redirect immediately to the dashboard
+        window.location.replace("/dashboard");
+    </script>
 </head>
 <body>
-    <main class="page auth-page">
-        <section class="card auth-card auth-card-wide">
-            <div class="auth-hero">
-                <div>
-                    <p class="eyebrow">Recipe Generator</p>
-                    <h1>Cook smarter with your Azure-hosted recipe dashboard.</h1>
-                    <p class="intro">
-                        Sign in with Azure App Service Authentication to generate recipes,
-                        save recipe history as JSON in Blob Storage, and keep recipe photos there too.
-                    </p>
-                    <div class="feature-grid">
-                        <article class="feature-tile">
-                            <h2>Managed Sign-In</h2>
-                            <p>Authentication is handled by Azure App Service, so your session is managed automatically.</p>
-                        </article>
-                        <article class="feature-tile">
-                            <h2>Saved Recipes</h2>
-                            <p>Your personal recipe history is linked to your account and saved as JSON files in Blob Storage.</p>
-                        </article>
-                        <article class="feature-tile">
-                            <h2>Image Uploads</h2>
-                            <p>Attach dish and ingredient photos, then keep their URLs in your recipe records.</p>
-                        </article>
-                    </div>
-                </div>
-
-                <aside class="auth-panel login-panel">
-                    <p class="eyebrow">Welcome</p>
-                    <h2 class="panel-title">Sign in to continue</h2>
-                    <p id="auth-status" class="auth-status">Checking your app service session...</p>
-                    <div class="stack-actions">
-                        <button id="login-button" type="button" class="secondary-button">Sign In</button>
-                        <button id="dashboard-button" type="button" class="ghost-button">Open Dashboard</button>
-                    </div>
-                    <p class="panel-note">
-                        After signing in, you'll be redirected to your recipe dashboard automatically.
-                    </p>
-                </aside>
-            </div>
-        </section>
-    </main>
-
-    <script type="module" src="{{ url_for('static', filename='login.js') }}"></script>
+    <noscript>
+        <p>Redirecting to your dashboard... <a href="/dashboard">Click here if not redirected automatically.</a></p>
+    </noscript>
 </body>
 </html>

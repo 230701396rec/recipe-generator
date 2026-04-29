@@ -8,17 +8,43 @@ import {
 
 const form = document.getElementById("recipe-form");
 const imageInput = document.getElementById("image");
+const imagePreview = document.getElementById("image-preview");
 const generateButton = document.getElementById("generate-button");
 const saveButton = document.getElementById("save-button");
 const refreshRecipesButton = document.getElementById("refresh-recipes-button");
 const logoutButton = document.getElementById("logout-button");
-const authStatus = document.getElementById("auth-status");
 const statusMessage = document.getElementById("status-message");
-const savedStatus = document.getElementById("saved-status");
 const recipeOutput = document.getElementById("recipe-output");
 const savedRecipes = document.getElementById("saved-recipes");
 
 let currentRecipe = "";
+
+imageInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            imagePreview.classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+    } else {
+        imagePreview.src = "";
+        imagePreview.classList.add("hidden");
+    }
+});
+
+function parseMarkdown(text) {
+    if (!text) return "";
+    return text
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
 
 function setRecipeActionsEnabled(isEnabled) {
     saveButton.disabled = !isEnabled;
@@ -26,7 +52,7 @@ function setRecipeActionsEnabled(isEnabled) {
 
 function resetRecipeOutput(message) {
     currentRecipe = "";
-    recipeOutput.textContent = message;
+    recipeOutput.innerHTML = message;
     setRecipeActionsEnabled(false);
 }
 
@@ -59,41 +85,29 @@ function recipeCardTemplate(recipe) {
                 </div>
                 <p class="recipe-meta">${recipe.createdAt || "Just now"}</p>
                 <p class="recipe-meta">${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : (recipe.ingredients || "No ingredients provided.")}</p>
-                <pre>${recipe.generatedRecipe}</pre>
+                <div class="recipe-content">${parseMarkdown(recipe.generatedRecipe)}</div>
             </div>
         </article>
     `;
 }
 
 async function loadSavedRecipes() {
-    if (!isAuthConfigured()) {
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
-        savedRecipes.innerHTML = "";
-        return;
-    }
-
-    if (!isAuthEnabled()) {
-        savedStatus.textContent = "Your session is missing. Please sign in again.";
-        savedRecipes.innerHTML = "";
-        window.location.assign("/");
+    if (!isAuthConfigured() || !isAuthEnabled()) {
+        savedRecipes.innerHTML = "<p>Please sign in to access your recipes.</p>";
         return;
     }
 
     try {
-        savedStatus.textContent = "Loading your saved recipes...";
         const data = await apiRequest("/my-recipes");
 
         if (!data.recipes.length) {
-            savedRecipes.innerHTML = "";
-            savedStatus.textContent = "No recipes saved yet.";
+            savedRecipes.innerHTML = "<p>No recipes saved yet.</p>";
             return;
         }
 
         savedRecipes.innerHTML = data.recipes.map(recipeCardTemplate).join("");
-        savedStatus.textContent = `${data.recipes.length} recipe(s) loaded.`;
     } catch (error) {
-        savedRecipes.innerHTML = "";
-        savedStatus.textContent = error.message;
+        savedRecipes.innerHTML = `<p class="error-text">${error.message}</p>`;
     }
 }
 
@@ -102,7 +116,7 @@ form.addEventListener("submit", async (event) => {
 
     generateButton.disabled = true;
     statusMessage.textContent = "Generating recipe...";
-    recipeOutput.textContent = "Please wait while your recipe is being created.";
+    recipeOutput.innerHTML = "Please wait while your recipe is being created.";
 
     try {
         const formData = new FormData(form);
@@ -112,7 +126,7 @@ form.addEventListener("submit", async (event) => {
         });
 
         currentRecipe = data.recipe;
-        recipeOutput.textContent = currentRecipe;
+        recipeOutput.innerHTML = parseMarkdown(currentRecipe);
         statusMessage.textContent = "Recipe generated successfully.";
         setRecipeActionsEnabled(Boolean(currentRecipe));
     } catch (error) {
@@ -165,28 +179,14 @@ logoutButton.addEventListener("click", async () => {
 });
 
 onAuthStateChanged(async ({ enabled, user, error }) => {
-    if (error) {
-        authStatus.textContent = error.message;
-        savedStatus.textContent = error.message;
-        return;
-    }
+    if (error) return;
 
-    if (!enabled) {
-        authStatus.textContent = "Easy Auth is not available in this environment.";
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
-        setRecipeActionsEnabled(false);
-        return;
-    }
-
-    if (!user) {
-        authStatus.textContent = "No active session found. Redirecting to sign in...";
-        savedStatus.textContent = "Please sign in to access your dashboard.";
+    if (!enabled || !user) {
         setRecipeActionsEnabled(false);
         window.location.assign("/");
         return;
     }
 
-    authStatus.textContent = `Signed in as ${user.email || user.userId}.`;
     setRecipeActionsEnabled(Boolean(currentRecipe));
     await loadSavedRecipes();
 });
@@ -194,13 +194,8 @@ onAuthStateChanged(async ({ enabled, user, error }) => {
 try {
     const authState = await initAuth();
     if (!authState.user && isAuthConfigured()) {
-        authStatus.textContent = "No active session found. Redirecting to sign in...";
         window.location.assign("/");
-    } else if (!authState.user) {
-        authStatus.textContent = "Easy Auth is not available in this environment.";
-        savedStatus.textContent = "Easy Auth is not available in this environment.";
     }
 } catch (error) {
-    authStatus.textContent = error.message;
-    savedStatus.textContent = error.message;
+    console.error("Auth initialization failed:", error);
 }

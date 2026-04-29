@@ -11,20 +11,17 @@
         <section class="card">
             <header class="dashboard-header">
                 <div>
-                    <p class="eyebrow">Recipe Dashboard</p>
-                    <h1>Generate, save, and revisit recipes in one place.</h1>
+                    <p class="eyebrow">RecipeGenie</p>
+                    <h1>Generate, save and revisit recipes in one place.</h1>
                     <p class="intro">
-                        Use your dashboard to create new recipes, upload images, and manage
-                        your saved collection tied to your authenticated app service account.
+                        Create new recipes, upload images and manage your saved collection.
                     </p>
                 </div>
 
                 <aside class="auth-panel">
                     <div class="result-actions">
-                        <a href="/" class="ghost-button link-button">Back to Sign In</a>
                         <button id="logout-button" type="button" class="secondary-button">Logout</button>
                     </div>
-                    <p id="auth-status" class="auth-status">Checking app service session...</p>
                 </aside>
             </header>
 
@@ -39,8 +36,9 @@
                             placeholder="Example: I have tomatoes, onions, garlic, pasta, and olive oil."
                         ></textarea>
 
-                        <label for="image">Upload an image of ingredients or the finished dish (optional)</label>
+                        <label for="image">Upload image of the ingredients or dish</label>
                         <input id="image" name="image" type="file" accept="image/*">
+                        <img id="image-preview" src="" alt="Image preview" class="hidden image-preview">
 
                         <button id="generate-button" type="submit">Generate Recipe</button>
                     </form>
@@ -53,7 +51,7 @@
                                 <button id="save-button" type="button" class="secondary-button" disabled>Save Recipe</button>
                             </div>
                         </div>
-                        <pre id="recipe-output" class="recipe-output">Your generated recipe will appear here.</pre>
+                        <div id="recipe-output" class="recipe-output">Your generated recipe will appear here.</div>
                     </section>
                 </section>
 
@@ -62,9 +60,6 @@
                         <h2>My Saved Recipes</h2>
                         <button id="refresh-recipes-button" type="button" class="ghost-button">Refresh</button>
                     </div>
-                    <p id="saved-status" class="status-message">
-                        Sign in to check your saved recipe status in Azure Blob Storage.
-                    </p>
                     <div id="saved-recipes" class="saved-recipes"></div>
                 </section>
             </div>

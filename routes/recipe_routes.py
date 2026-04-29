@@ -150,13 +150,18 @@ def create_recipe_blueprint(blob_service, recipe_service):
 
         try:
             page, page_size = _get_pagination()
+            all_recipes = blob_service.get_user_recipes(user["userId"])
+            start = (page - 1) * page_size
+            end = start + page_size
+            paginated_recipes = all_recipes[start:end]
+
             return (
                 jsonify(
                     {
-                        "recipes": [],
+                        "recipes": paginated_recipes,
                         "page": page,
                         "pageSize": page_size,
-                        "total": 0,
+                        "total": len(all_recipes),
                         "user": {
                             "userId": user["userId"],
                             "email": user.get("email", ""),
