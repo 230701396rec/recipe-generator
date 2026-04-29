@@ -113,7 +113,7 @@ customMetrics
 
 ## Azure deployment
 
-Deploy this repository to an Azure Web App on Linux with Python 3.14.
+Deploy this repository to an Azure Web App on Linux with Python 3.12.
 
 ### Azure App Settings
 
@@ -122,6 +122,9 @@ Add these Application Settings in Azure:
 - `SCM_DO_BUILD_DURING_DEPLOYMENT = true`
 - `MISTRAL_API_KEY = <your_api_key>`
 - `MISTRAL_MODEL = mistral-small-latest`
+- `APPLICATIONINSIGHTS_CONNECTION_STRING = <your Application Insights connection string>`
+
+Set the App Service runtime stack to Python 3.12. If Azure shows "Application Insights is not supported due to runtime configuration," the app is likely still using an unsupported or too-new runtime stack for the portal integration.
 
 ### Startup command
 
@@ -136,7 +139,7 @@ The app entry point is `app.py` and the Flask application instance is `app`, so 
 ### GitHub deployment flow
 
 1. Push this project to GitHub.
-2. In Azure, create a Linux Web App using Python 3.14.
+2. In Azure, create a Linux Web App using Python 3.12.
 3. Connect the Web App to your GitHub repository.
 4. Azure will install dependencies from `requirements.txt` and start the app with gunicorn.
 
